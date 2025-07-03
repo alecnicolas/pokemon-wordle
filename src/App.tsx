@@ -1,0 +1,184 @@
+import { useState, useEffect, useRef } from 'react'
+import './App.css'
+import PokemonTable from './components/PokemonTable/PokemonTable';
+import { GenerationCap, type GenerationCapType, type Pokemon, type PokemonRow } from './types';
+
+const App = () => {
+  const [count, setCount] = useState(0);
+  const [pokemon, setPokemon] = useState(null);
+  const [currentGuess, setCurrentGuess] = useState("");
+  const [guesses, setGuesses] = useState<any[]>([]);
+  const [selectedGen, setGen] = useState('Gen3' as GenerationCapType);
+  const alreadyFetched = useRef(false);
+
+  useEffect(() => {
+    if (!alreadyFetched.current) {
+      getNewPokemon();
+      alreadyFetched.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log('Pokemon changed:', pokemon);
+  }, [pokemon]);
+
+  const getNewPokemon = () => {
+    const generatedNumber = generatePokeId(selectedGen);
+
+    fetch(`https://pokeapi.co/api/v2/pokemon/${generatedNumber}`)
+      .then(response => response.json())
+      .then(data => { 
+        setPokemon(data);
+      })
+      .catch(err => console.error(err));
+  }
+
+  const getGuessedPokemon = (guess: string) => {
+    const alreadyGuessed = guesses.some(g => g.name.toLocaleLowerCase() === guess.toLocaleLowerCase());
+
+    if (alreadyGuessed) {
+      console.log("You already guessed that Pokémon!");
+      return;
+    } else {
+      fetch(`https://pokeapi.co/api/v2/pokemon/${guess}`)
+        .then(response => response.json())
+        .then(data => { 
+          if(data.id > GenerationCap[selectedGen]) {
+            console.log('Outside of generation')
+            return;
+          }
+          setGuesses(prev => [...prev, data]);
+          setCount(prev => prev + 1);
+        })
+        .catch(err => console.error(err));
+    }
+
+  }
+
+  // Utils
+  const generatePokeId = (cap: GenerationCapType) => {
+    const min = 1;
+    const max = GenerationCap[cap];
+
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  const extractGeneration = (pokemon: any): string => {
+    const version = pokemon.game_indices[0].version;
+    if (!version) return "Unknown";
+
+    const gen = version.name;
+
+    const gameToGen: Record<string, number> = {
+      // Gen 1
+      "red": 1,
+      "blue": 1,
+      "yellow": 1,
+
+      // Gen 2
+      "gold": 2,
+      "silver": 2,
+      "crystal": 2,
+
+      // Gen 3
+      "ruby": 3,
+      "sapphire": 3,
+      "emerald": 3,
+      "firered": 3,
+      "leafgreen": 3,
+
+      // Gen 4
+      "diamond": 4,
+      "pearl": 4,
+      "platinum": 4,
+      "heartgold": 4,
+      "soulsilver": 4,
+
+      // Gen 5
+      "black": 5,
+      "white": 5,
+      "black-2": 5,
+      "white-2": 5,
+
+      // Gen 6
+      "x": 6,
+      "y": 6,
+      "omegaruby": 6,
+      "alphasapphire": 6,
+
+      // Gen 7
+      "sun": 7,
+      "moon": 7,
+      "ultra-sun": 7,
+      "ultra-moon": 7,
+      "lets-go-pikachu": 7,
+      "lets-go-eevee": 7,
+
+      // Gen 8
+      "sword": 8,
+      "shield": 8,
+      "brilliant-diamond": 8,
+      "shining-pearl": 8,
+      "legends-arceus": 8,
+
+      // Gen 9
+      "scarlet": 9,
+      "violet": 9,
+    };
+
+    const genNumber = gameToGen[gen];
+    return genNumber ? `Generation ${genNumber}` : "Unknown";
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    getGuessedPokemon(currentGuess);
+  }
+
+  const toPokemonRow = (pokemon: Pokemon): PokemonRow => {
+
+    return {
+      name: pokemon.name,
+      types: pokemon.types,
+      height: pokemon.height,
+      weight: pokemon.weight,
+      generation: extractGeneration(pokemon),
+    };
+}
+
+  return (
+    <>
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-4">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-6">Guess the Pokémon!</h1>
+
+          <form
+            onSubmit={handleSubmit}
+            className="flex justify-center items-center gap-2 mb-4"
+          >
+            <input
+              type="text"
+              value={currentGuess}
+              onChange={(e) => setCurrentGuess(e.target.value)}
+              placeholder="Enter Pokémon name"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-violet-800 text-white rounded-lg hover:bg-violet-600 transition"
+            >
+              Submit
+            </button>
+          </form>
+
+          <p className="text-lg text-gray-700 font-medium">
+            Guesses Used: <span className="font-bold">{count}/8</span>
+          </p>
+          <PokemonTable data={guesses.map(toPokemonRow)} secretPokemon={toPokemonRow(pokemon!!)}></PokemonTable>
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default App
