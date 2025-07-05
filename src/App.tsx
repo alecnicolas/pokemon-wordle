@@ -2,14 +2,18 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import PokemonTable from './components/PokemonTable/PokemonTable';
 import { GenerationCap, type GenerationCapType, type Pokemon, type PokemonRow } from './types';
+import { capitalize } from './util';
+import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
 
 const App = () => {
   const [count, setCount] = useState(0);
-  const [pokemon, setPokemon] = useState(null);
+  const [pokemon, setPokemon] = useState<Pokemon | null>(null);
   const [currentGuess, setCurrentGuess] = useState("");
   const [guesses, setGuesses] = useState<any[]>([]);
-  const [selectedGen, setGen] = useState('Gen3' as GenerationCapType);
+  const [selectedGen, setGen] = useState('Gen5' as GenerationCapType);
   const alreadyFetched = useRef(false);
+
+  const allowedAttempts = 8;
 
   useEffect(() => {
     if (!alreadyFetched.current) {
@@ -27,7 +31,7 @@ const App = () => {
 
     fetch(`https://pokeapi.co/api/v2/pokemon/${generatedNumber}`)
       .then(response => response.json())
-      .then(data => { 
+      .then(data => {
         setPokemon(data);
       })
       .catch(err => console.error(err));
@@ -42,8 +46,8 @@ const App = () => {
     } else {
       fetch(`https://pokeapi.co/api/v2/pokemon/${guess}`)
         .then(response => response.json())
-        .then(data => { 
-          if(data.id > GenerationCap[selectedGen]) {
+        .then(data => {
+          if (data.id > GenerationCap[selectedGen]) {
             console.log('Outside of generation')
             return;
           }
@@ -130,9 +134,16 @@ const App = () => {
     return genNumber ? `Generation ${genNumber}` : "Unknown";
   }
 
+  const resetGame = () => {
+    getNewPokemon();
+    setGuesses([]);
+    setCount(0);
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     getGuessedPokemon(currentGuess);
+    setCurrentGuess("");
   }
 
   const toPokemonRow = (pokemon: Pokemon): PokemonRow => {
@@ -144,40 +155,106 @@ const App = () => {
       weight: pokemon.weight,
       generation: extractGeneration(pokemon),
     };
-}
+  }
+
+
+const getHeader = () => {
+  if (isLastGuessCorrect) {
+    return (
+      <h1 className="text-3xl font-bold mb-6 text-green-600 flex items-center justify-center gap-2">
+        {capitalize(pokemon.name)}
+        <CheckIcon className="size-6" />
+      </h1>
+    );
+  }
+
+  if (outOfGuesses) {
+    return (
+      <h1 className="text-3xl font-bold mb-6 text-red-500 flex items-center justify-center gap-2">
+        {capitalize(pokemon.name)}
+        <XMarkIcon className="size-6" />
+      </h1>
+    );
+  }
 
   return (
-    <>
-      <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-4">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-6">Guess the Pokémon!</h1>
+    <h1 className="text-3xl font-bold mb-6">
+      Guess the Pokémon!
+    </h1>
+  );
+};
 
-          <form
-            onSubmit={handleSubmit}
-            className="flex justify-center items-center gap-2 mb-4"
-          >
-            <input
-              type="text"
-              value={currentGuess}
-              onChange={(e) => setCurrentGuess(e.target.value)}
-              placeholder="Enter Pokémon name"
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+  const lastGuess = guesses[guesses.length - 1];
+  const isLastGuessCorrect = !!pokemon && !!lastGuess && pokemon.name === lastGuess.name;
+  const outOfGuesses = pokemon && !isLastGuessCorrect && count >= allowedAttempts;
+
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-4">
+      <div className="text-center">
+        {getHeader()}
+        {isLastGuessCorrect &&
+          <div className="flex justify-center mb-4">
+            <img
+              src={pokemon.sprites.front_default}
+              alt={capitalize(pokemon.name)}
+              className="w-40 h-40 object-contain rounded-md border border-green-600 shadow"
             />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-violet-800 text-white rounded-lg hover:bg-violet-600 transition"
-            >
-              Submit
-            </button>
-          </form>
+          </div>
+        }
+        {outOfGuesses &&
+          <div className="flex justify-center mb-4">
+            <img
+              src={pokemon.sprites.front_default}
+              alt={capitalize(pokemon.name)}
+              className="w-40 h-40 object-contain rounded-md border border-red-500 shadow"
+            />
+          </div>
+        }
+        {isLastGuessCorrect &&
+          <button
+            type="submit"
+            className="px-4 py-2 mb-4 bg-green-800 text-white rounded-lg hover:bg-green-600 transition"
+            onClick={resetGame}
+          >
+            Play again?
+          </button>
+        }
+        {outOfGuesses &&
+          <button
+            type="submit"
+            className="px-4 py-2 mb-4 bg-red-500 text-white rounded-lg hover:bg-red-400 transition"
+            onClick={resetGame}
+          >
+            Try again?
+          </button>
+        }
+        <form
+          onSubmit={handleSubmit}
+          className="flex justify-center items-center gap-2 mb-4"
+        >
+          <input
+            type="text"
+            value={currentGuess}
+            disabled={isLastGuessCorrect || outOfGuesses}
+            onChange={(e) => setCurrentGuess(e.target.value)}
+            placeholder="Enter Pokémon name"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            disabled={isLastGuessCorrect || outOfGuesses}
+            className="px-4 py-2 bg-violet-800 text-white rounded-lg hover:bg-violet-600 transition disabled:bg-gray-500"
+          >
+            Submit
+          </button>
+        </form>
 
-          <p className="text-lg text-gray-700 font-medium">
-            Guesses Used: <span className="font-bold">{count}/8</span>
-          </p>
-          <PokemonTable data={guesses.map(toPokemonRow)} secretPokemon={toPokemonRow(pokemon!!)}></PokemonTable>
-        </div>
+        <p className="text-lg text-gray-700 font-medium">
+          Guesses Used: <span className="font-bold">{count}/{allowedAttempts}</span>
+        </p>
+        {pokemon && <PokemonTable data={guesses.map(toPokemonRow)} secretPokemon={toPokemonRow(pokemon)}></PokemonTable>}
       </div>
-    </>
+    </div>
   )
 }
 

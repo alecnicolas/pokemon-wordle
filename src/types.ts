@@ -22,7 +22,9 @@ export type Pokemon = {
   moves: unknown[];
   past_types: unknown[];
   past_abilities: unknown[];
-  sprites: unknown;
+  sprites: {
+    front_default: string;
+  };
   cries: unknown;
   species: unknown;
   stats: unknown[];
@@ -32,7 +34,13 @@ export type Pokemon = {
 export const GenerationCap = {
   Gen1: 151,
   Gen2: 251,
-  Gen3: 386
+  Gen3: 386,
+  Gen4: 493,
+  Gen5: 649,
+  Gen6: 721,
+  Gen7: 809,
+  Gen8: 905,
+  Gen9: 1025
 }
 
 export type GenerationCapType = keyof typeof GenerationCap;

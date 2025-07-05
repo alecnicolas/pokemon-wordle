@@ -1,13 +1,12 @@
-import type { Pokemon, PokemonRow } from "../../types";
+import type { PokemonRow } from "../../types";
+import PokemonDataRow from "../PokemonDataCell/PokemonDataRow";
 
 type Props = {
   data: PokemonRow[];
-  secretPokemon: Pokemon;
+  secretPokemon: PokemonRow;
 };
+const PokemonTable = ({ data, secretPokemon }: Props) => {
 
-const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
-
-export default function PokemonTable({ data, secretPokemon }: Props) {
   return (
     <div className="w-full overflow-x-auto bg-white shadow-md rounded-lg">
       <table className="min-w-full table-auto text-sm text-left">
@@ -22,42 +21,16 @@ export default function PokemonTable({ data, secretPokemon }: Props) {
         </thead>
         <tbody className="divide-y divide-gray-200">
           {data.map((pokemon, index) => (
-            <tr key={index} className="hover:bg-gray-50">
-              <td className="px-4 py-2 font-medium text-black">{capitalize(pokemon.name)}</td>
-              <td className="px-4 py-2">
-                <div className="flex flex-wrap gap-2">
-                  {(pokemon.types as { type: { name: string } }[]).map((t, i) => {
-                    if (secretPokemon.types.some(type => type.name === t.type.name)) {
-                      return (
-                        <span
-                          key={i}
-                          className="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded-full"
-                        >
-                          {capitalize(t.type.name)}
-                        </span>
-
-                      )
-                    } else {
-                      return (
-                        <span
-                          key={i}
-                          className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full"
-                        >
-                          {capitalize(t.type.name)}
-                        </span>
-
-                      )
-                    }
-                  })}
-                </div>
-              </td>
-              <td className="px-4 py-2 text-black">{pokemon.height * 10}cm</td>
-              <td className="px-4 py-2 text-black">{pokemon.weight / 10}kg</td>
-              <td className="px-4 py-2 text-black">{pokemon.generation}</td>
-            </tr>
+            <PokemonDataRow
+              key={index}
+              pokemon={pokemon}
+              secretPokemon={secretPokemon}
+            />
           ))}
         </tbody>
       </table>
     </div>
   );
 }
+
+export default PokemonTable;
