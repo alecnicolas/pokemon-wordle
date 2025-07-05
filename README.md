@@ -1,69 +1,69 @@
-# React + TypeScript + Vite
+# PokeGuesser
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A fun guessing game where you try to identify a secret Pokémon based on clues such as types, height, weight, and generation.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## How to Play
 
-## Expanding the ESLint configuration
+- The game randomly selects a secret Pokémon.
+- You have **8 guesses** to figure out which Pokémon it is.
+- Each guess requires you to enter a Pokémon’s name.
+- After each guess, you receive clues comparing your guess to the secret Pokémon:
+  - **Types**: Colored chips show if your guessed Pokémon shares types with the secret one.
+  - **Height & Weight**: Arrows indicate if your guess is taller/shorter or heavier/lighter.
+  - **Generation**: Indicates if your guess belongs to the same generation as the secret Pokémon.
+- Use these clues to narrow down your guesses and find the correct Pokémon.
+- If you guess correctly, the Pokémon name appears in green with a checkmark.
+- If you run out of guesses, the secret Pokémon is revealed in red with an "X".
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Local Setup Instructions
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+Follow these steps to run the app locally on your machine:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Prerequisites
+
+- Node.js (version 18+ recommended)
+- npm (comes with Node.js)
+- Git (optional, for cloning repo)
+
+### Clone the Repository (if needed)
+
+```bash
+git clone https://github.com/alecnicolas/pokemon-wordle.git
+cd pokemon-wordle
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Install Dependencies
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Install all required packages using npm:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+### Run the development server
+
+Start the app locally with:
+
+```bash
+npm run dev
+```
+
+This will launch a local dev server, usually at:
+
+```bash
+  http://localhost:5173/
+```
+
+Open this URL to play in your browser.
+
+### Tech used
+- React with Typescript
+- Vite
+- Tailwind CSS
+- PokeAPI
+
+### Notes
+- The app uses live data from PokeAPI so an internet connection is required
