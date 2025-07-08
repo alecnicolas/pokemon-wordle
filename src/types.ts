@@ -32,15 +32,15 @@ export type Pokemon = {
 };
 
 export const GenerationCap = {
-  Gen1: 151,
-  Gen2: 251,
-  Gen3: 386,
-  Gen4: 493,
-  Gen5: 649,
-  Gen6: 721,
-  Gen7: 809,
-  Gen8: 905,
-  Gen9: 1025
+  1: 151,
+  2: 251,
+  3: 386,
+  4: 493,
+  5: 649,
+  6: 721,
+  7: 809,
+  8: 905,
+  9: 1025
 }
 
 export type GenerationCapType = keyof typeof GenerationCap;

@@ -4,30 +4,24 @@ import PokemonTable from './components/PokemonTable/PokemonTable';
 import { GenerationCap, type GenerationCapType, type Pokemon, type PokemonRow } from './types';
 import { capitalize } from './util';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import GenerationSelectionSlider from './components/GenerationSelectionSlider/GenerationSelectionSlider';
+import pokeball from './assets/8bit-pokeball.png';
 
 const App = () => {
   const [count, setCount] = useState(0);
   const [pokemon, setPokemon] = useState<Pokemon | null>(null);
   const [currentGuess, setCurrentGuess] = useState("");
   const [guesses, setGuesses] = useState<any[]>([]);
-  const [selectedGen, setGen] = useState('Gen5' as GenerationCapType);
-  const alreadyFetched = useRef(false);
+  const [selectedGen, setGen] = useState(5);
 
   const allowedAttempts = 8;
-
-  useEffect(() => {
-    if (!alreadyFetched.current) {
-      getNewPokemon();
-      alreadyFetched.current = true;
-    }
-  }, []);
 
   useEffect(() => {
     console.log('Pokemon changed:', pokemon);
   }, [pokemon]);
 
   const getNewPokemon = () => {
-    const generatedNumber = generatePokeId(selectedGen);
+    const generatedNumber = generatePokeId(selectedGen as GenerationCapType);
 
     fetch(`https://pokeapi.co/api/v2/pokemon/${generatedNumber}`)
       .then(response => response.json())
@@ -47,7 +41,7 @@ const App = () => {
       fetch(`https://pokeapi.co/api/v2/pokemon/${guess}`)
         .then(response => response.json())
         .then(data => {
-          if (data.id > GenerationCap[selectedGen]) {
+          if (data.id > GenerationCap[selectedGen as GenerationCapType]) {
             console.log('Outside of generation')
             return;
           }
@@ -158,57 +152,77 @@ const App = () => {
   }
 
 
-const getHeader = () => {
-  if (isLastGuessCorrect) {
+  const getHeader = () => {
+    if (isLastGuessCorrect) {
+      return (
+        <h1 className="text-3xl font-bold mb-6 text-green-600 flex items-center justify-center gap-2">
+          {capitalize(pokemon.name)}
+          <CheckIcon className="size-6" />
+        </h1>
+      );
+    }
+
+    if (outOfGuesses) {
+      return (
+        <h1 className="text-3xl font-bold mb-6 text-red-500 flex items-center justify-center gap-2">
+          {capitalize(pokemon.name)}
+          <XMarkIcon className="size-6" />
+        </h1>
+      );
+    }
+
     return (
-      <h1 className="text-3xl font-bold mb-6 text-green-600 flex items-center justify-center gap-2">
-        {capitalize(pokemon.name)}
-        <CheckIcon className="size-6" />
+      <h1 className="text-3xl font-bold mb-6">
+        Guess the Pokémon!
       </h1>
     );
-  }
-
-  if (outOfGuesses) {
-    return (
-      <h1 className="text-3xl font-bold mb-6 text-red-500 flex items-center justify-center gap-2">
-        {capitalize(pokemon.name)}
-        <XMarkIcon className="size-6" />
-      </h1>
-    );
-  }
-
-  return (
-    <h1 className="text-3xl font-bold mb-6">
-      Guess the Pokémon!
-    </h1>
-  );
-};
+  };
 
   const lastGuess = guesses[guesses.length - 1];
   const isLastGuessCorrect = !!pokemon && !!lastGuess && pokemon.name === lastGuess.name;
   const outOfGuesses = pokemon && !isLastGuessCorrect && count >= allowedAttempts;
 
+  const inGame = !isLastGuessCorrect && !outOfGuesses && pokemon
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-4">
       <div className="text-center">
         {getHeader()}
-        {isLastGuessCorrect &&
-          <div className="flex justify-center mb-4">
-            <img
-              src={pokemon.sprites.front_default}
-              alt={capitalize(pokemon.name)}
-              className="w-40 h-40 object-contain rounded-md border border-green-600 shadow"
-            />
-          </div>
-        }
-        {outOfGuesses &&
-          <div className="flex justify-center mb-4">
-            <img
-              src={pokemon.sprites.front_default}
-              alt={capitalize(pokemon.name)}
-              className="w-40 h-40 object-contain rounded-md border border-red-500 shadow"
-            />
-          </div>
+      <div className="flex justify-center mb-4">
+        {isLastGuessCorrect ? (
+          <img
+            src={pokemon.sprites.front_default}
+            alt={capitalize(pokemon.name)}
+            className="w-40 h-40 object-contain rounded-md border border-green-600 shadow"
+          />
+        ) : outOfGuesses ? (
+          <img
+            src={pokemon.sprites.front_default}
+            alt={capitalize(pokemon.name)}
+            className="w-40 h-40 object-contain rounded-md border border-red-500 shadow"
+          />
+        ) : pokemon ? (
+          <img
+            src={pokeball}
+            alt="pokeball"
+            className="w-40 h-40 object-contain rounded-md border border-gray-600 shadow"
+          />
+        ) : <></>
+      }
+      </div>
+        <GenerationSelectionSlider
+          selectedGen={selectedGen}
+          onChange={setGen}
+          disabled={!!inGame}
+        />
+        {!pokemon &&
+          <button
+            type="submit"
+            className="px-4 py-2 mb-4 bg-green-800 text-white rounded-lg hover:bg-green-600 transition"
+            onClick={getNewPokemon}
+          >
+            Start Game
+          </button>
         }
         {isLastGuessCorrect &&
           <button
@@ -235,21 +249,21 @@ const getHeader = () => {
           <input
             type="text"
             value={currentGuess}
-            disabled={isLastGuessCorrect || outOfGuesses}
+            disabled={!inGame}
             onChange={(e) => setCurrentGuess(e.target.value)}
             placeholder="Enter Pokémon name"
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             type="submit"
-            disabled={isLastGuessCorrect || outOfGuesses}
+            disabled={!inGame}
             className="px-4 py-2 bg-violet-800 text-white rounded-lg hover:bg-violet-600 transition disabled:bg-gray-500"
           >
             Submit
           </button>
         </form>
 
-        <p className="text-lg text-gray-700 font-medium">
+        <p className="text-lg text-gray-300 font-medium mb-4">
           Guesses Used: <span className="font-bold">{count}/{allowedAttempts}</span>
         </p>
         {pokemon && <PokemonTable data={guesses.map(toPokemonRow)} secretPokemon={toPokemonRow(pokemon)}></PokemonTable>}
